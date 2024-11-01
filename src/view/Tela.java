@@ -34,12 +34,12 @@ public class Tela extends JFrame
 	private List<LinkEtiqueta> links;
 	private boolean buscando = false;
 
-	public Tela()
+	public Tela(List<Integer> lidas)
 	{
 		try 
 		{
 			c = getContentPane();
-			comunica = new Comunica();
+			comunica = new Comunica(lidas);
 			imprimir = new Imprimir();
  
 			panel = new JPanel(new FlowLayout());

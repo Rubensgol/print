@@ -2,6 +2,7 @@ package model;
 
 public class Expedica
 {
+	private Expedica retorno;
 	private Expedicao expedicao;
 
 	public Expedicao getExpedicao() 
@@ -13,6 +14,14 @@ public class Expedica
 	{
 		this.expedicao = expedicao;
 	}
-	
-	
+
+	public Expedica getRetorno() 
+	{
+		return retorno;
+	}
+
+	public void setRetorno(Expedica retorno) 
+	{
+		this.retorno = retorno;
+	}
 }

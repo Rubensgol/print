@@ -10,7 +10,6 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import controler.IImprimir;
-import test.PrintJob;
 
 public class Imprimir implements IImprimir
 {
@@ -23,9 +22,9 @@ public class Imprimir implements IImprimir
 
         	String tDir = System.getProperty("java.io.tmpdir");
 
-        	path = tDir + "tmp" + ".pdf";
+        	String nameFile = tDir + "tmp" + ".pdf";
 
-        	pdf = new File(path);
+        	pdf = new File(path, nameFile);
         	pdf.deleteOnExit();
         	FileUtils.copyURLToFile(url, pdf);
 

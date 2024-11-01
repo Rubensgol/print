@@ -16,10 +16,18 @@ import model.LinkEtiqueta;
 import model.RetornoEtiqueta;
 import model.RetornoSeparacao;
 import model.Separacao;
+import util.UrlsTiny;
 import util.Util;
 
 public class Comunica
 {
+	private List<Integer> nfLidas;
+
+	public Comunica(List<Integer> nfLidas)
+	{
+		this.nfLidas = nfLidas;
+	}
+
 	public List<LinkEtiqueta> getEtiquetas(String token) throws IOException
 	{
 		List<LinkEtiqueta> links = new ArrayList<>();
@@ -35,11 +43,17 @@ public class Comunica
 			{
 				for (Separacao separa : retornoSepara.getSeparacoes())
 				{
+					if(nfLidas.contains(separa.getIdOrigem()))
+					{
+						continue;
+					}
+
 					Expedica retornoExpedica = getExpedicao(token, separa.getIdOrigem(), separa.getObjOrigem());
 
-					if (retornoExpedica != null && retornoExpedica.getExpedicao() != null)
+					if (retornoExpedica != null && retornoExpedica.getRetorno() != null &&
+						retornoExpedica.getRetorno().getExpedicao() != null)
 					{
-						RetornoEtiqueta retornEtiqueta = getEtiqueta(token, retornoExpedica.getExpedicao().getId());
+						RetornoEtiqueta retornEtiqueta = getEtiqueta(token, retornoExpedica.getRetorno().getExpedicao().getId());
 
 						if (retornEtiqueta != null && retornEtiqueta.getRetorno() != null)
 						{
@@ -47,6 +61,8 @@ public class Comunica
 
 							for (LinkEtiqueta link : retornEtiqueta.getLinks())
 								links.add(link);
+
+							nfLidas.add(separa.getIdOrigem());
 						}
 					}
 				}
