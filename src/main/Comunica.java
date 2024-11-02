@@ -141,4 +141,9 @@ public class Comunica
     	else
     		return EnumRetorno.ERRO_HEADER;
     }
+
+	public List<Integer> getNfLidas()
+	{
+		return nfLidas;
+	}
 }

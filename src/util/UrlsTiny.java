@@ -1,18 +1,11 @@
 package util;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 public class UrlsTiny
 {
 	public static String getSeparacao(String token)
 	{
     	StringBuilder urlParaChamada = new StringBuilder()
 				.append("https://api.tiny.com.br/api2/separacao.pesquisa.php?");
-
-    	Date data = new Date();
-
-    	SimpleDateFormat dtf = new SimpleDateFormat("dd/MM/yyyy");
 
     	urlParaChamada.append("token")
 		  			  .append("=")
@@ -24,11 +17,11 @@ public class UrlsTiny
 				  	  .append("&")
 				      .append("dataInicial")
 				      .append("=")
-				      .append(dtf.format(data))
+				      .append(Util.getDataFormatada())
 				      .append("&")
 				      .append("dataFinal")
 				      .append("=")
-				      .append(dtf.format(data))
+				      .append(Util.getDataFormatada())
 				      .append("&")
 				      .append("pagina")
 				      .append("=")

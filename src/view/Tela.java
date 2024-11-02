@@ -15,8 +15,10 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import controler.IImprimir;
+import controler.ITrataArquivo;
 import main.Comunica;
 import main.Imprimir;
+import main.TrataArquivo;
 import model.EnumRetorno;
 import model.LinkEtiqueta;
 
@@ -33,6 +35,7 @@ public class Tela extends JFrame
 	private IImprimir imprimir;
 	private List<LinkEtiqueta> links;
 	private boolean buscando = false;
+	private ITrataArquivo aTrataArquivo;
 
 	public Tela(List<Integer> lidas)
 	{
@@ -41,6 +44,7 @@ public class Tela extends JFrame
 			c = getContentPane();
 			comunica = new Comunica(lidas);
 			imprimir = new Imprimir();
+			aTrataArquivo = new TrataArquivo();
  
 			panel = new JPanel(new FlowLayout());
             panel.setSize(new Dimension(300,300));
@@ -61,10 +65,6 @@ public class Tela extends JFrame
 				{
 					buscando = true;
 
-					tToken.setEnabled(! buscando);
-					bIniciar.setEnabled(! buscando);
-					bParar.setEnabled(buscando);
-
 					if (tToken.getText() == null || tToken.getText().trim().equals(""))
 					{
 						new TelaErro(EnumRetorno.ERRO_EM_BRANCO);
@@ -78,10 +78,16 @@ public class Tela extends JFrame
 
 						if (retorno == EnumRetorno.SUCESSO || retorno == EnumRetorno.SUCESSO_EM_BRANCO)
 						{
+							tToken.setEnabled(! buscando);
+							bIniciar.setEnabled(! buscando);
+							bParar.setEnabled(buscando);		
+
 							links = comunica.getEtiquetas(tToken.getText());
 
 							for (LinkEtiqueta link : links)
 								imprimir.imprimir(link.getLink());
+							
+							aTrataArquivo.salvaTxt(comunica.getNfLidas());
 						}
 						else
 						{
@@ -109,7 +115,9 @@ public class Tela extends JFrame
 				tToken.setEnabled(! buscando);
 				bIniciar.setEnabled(! buscando);
 				bParar.setEnabled(buscando);
+				aTrataArquivo.salvaTxt(comunica.getNfLidas());
 			});
+
 			bParar.setEnabled(buscando);
 			panelBotao.add(bParar);
 	   

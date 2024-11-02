@@ -8,5 +8,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="jar/pdfbox-app-3.0.3.jar"/>
 	<classpathentry kind="lib" path="jar/gson-2.8.6.jar"/>
+	<classpathentry kind="lib" path="jar/log4j-1.2-api-2.12.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
