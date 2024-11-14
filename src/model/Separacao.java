@@ -7,6 +7,7 @@ public class Separacao
 	private String objOrigem;
 	private int idOrigemVinc;
 	private String objOrigemVinc;
+	private String dataCheckout;
 
 	public int getId() 
 	{
@@ -51,5 +52,15 @@ public class Separacao
 	public String getObjOrigemVinc()
 	{
 		return objOrigemVinc;
+	}
+
+	public void setDataCheckOut(String dataCheckout)
+	{
+		this.dataCheckout = dataCheckout;
+	}
+
+	public String getDataCheckOut()
+	{
+		return dataCheckout;
 	}
 }

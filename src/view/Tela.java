@@ -37,7 +37,7 @@ public class Tela extends JFrame
 	private boolean buscando = false;
 	private ITrataArquivo aTrataArquivo;
 
-	public Tela(List<String> lidas)
+	public Tela(List<Integer> lidas)
 	{
 		try 
 		{
@@ -87,7 +87,7 @@ public class Tela extends JFrame
 							for (LinkEtiqueta link : links)
 								imprimir.imprimir(link.getLink());
 							
-							aTrataArquivo.salvaTxt(comunica.getNfLidas());
+							aTrataArquivo.salvaTxt(comunica.getSeparacoesLidas());
 						}
 						else
 						{
@@ -115,7 +115,7 @@ public class Tela extends JFrame
 				tToken.setEnabled(! buscando);
 				bIniciar.setEnabled(! buscando);
 				bParar.setEnabled(buscando);
-				aTrataArquivo.salvaTxt(comunica.getNfLidas());
+				aTrataArquivo.salvaTxt(comunica.getSeparacoesLidas());
 			});
 
 			bParar.setEnabled(buscando);

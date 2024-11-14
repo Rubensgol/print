@@ -2,7 +2,7 @@ package util;
 
 public class UrlsTiny
 {
-	public static String getSeparacao(String token)
+	public static String getSeparacao(String token, int numeroPag)
 	{
     	StringBuilder urlParaChamada = new StringBuilder()
 				.append("https://api.tiny.com.br/api2/separacao.pesquisa.php?");
@@ -17,7 +17,7 @@ public class UrlsTiny
 				  	  .append("&")
 				      .append("dataInicial")
 				      .append("=")
-				      .append(Util.getDataFormatada())
+				      .append(Util.getDataFormatadaMesAnterior())
 				      .append("&")
 				      .append("dataFinal")
 				      .append("=")
@@ -25,7 +25,7 @@ public class UrlsTiny
 				      .append("&")
 				      .append("pagina")
 				      .append("=")
-				      .append(1)
+				      .append(numeroPag)
 				      .append("&")
 				      .append("situacao")
 				      .append("=")

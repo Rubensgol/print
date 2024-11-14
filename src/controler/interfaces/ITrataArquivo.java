@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface ITrataArquivo 
 {
-    public void salvaTxt(List<String> nfLidas);
+    public void salvaTxt(List<Integer> nfLidas);
 
-    public List<String> carregaArquivo();
+    public List<Integer> carregaArquivo();
 }

@@ -11,7 +11,7 @@ public class Program
 {    
     public static void  main (String[] args)
     {
-        List<String> nfsLidas = new ArrayList<>();
+        List<Integer> nfsLidas = new ArrayList<>();
         ITrataArquivo arqv = new TrataArquivo();
 
         nfsLidas = arqv.carregaArquivo();

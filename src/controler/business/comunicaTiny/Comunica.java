@@ -26,9 +26,9 @@ public class Comunica
 {
 	private Logger logger = Logger.getLogger(Comunica.class.getName());
 
-	private List<String> etiquetasLidas;
+	private List<Integer> separacoesLida;
 
-	public Comunica(List<String> etiquetasLidas)
+	public Comunica(List<Integer> separacoesLida)
 	{
 		try 
 		{
@@ -43,50 +43,39 @@ public class Comunica
 			logger.severe("erro" + e.getMessage());
 		}
 
-		this.etiquetasLidas = etiquetasLidas;
+		this.separacoesLida = separacoesLida;
 	}
 
 	public List<LinkEtiqueta> getEtiquetas(String token) throws IOException
 	{
 		List<LinkEtiqueta> links = new ArrayList<>();
 
-		RetornoSeparacao retornoSepara = getSeparacao(token);
+		List<Separacao> separacaos = getSeparacaos(token);
 		
-		if (retornoSepara != null && retornoSepara.getRetorno() != null)
+		if (separacaos != null)
 		{
-			retornoSepara = retornoSepara.getRetorno();
-
-			// fazer verificacoes dos retornos
-			if (retornoSepara.getStatusProcessamento() == 3 && retornoSepara.getCodigoErro() == 0)
+			for (Separacao separa : separacaos)
 			{
-				for (Separacao separa : retornoSepara.getSeparacoes())
+				Expedica retornoExpedica = null;
+
+				if (separa.getIdOrigemVinc() > 0)
+					retornoExpedica = getExpedicao(token, separa.getIdOrigemVinc(), separa.getObjOrigemVinc());
+				
+				if (retornoExpedica != null && retornoExpedica.getRetorno() != null &&
+					retornoExpedica.getRetorno().getExpedicao() != null)
 				{
-					Expedica retornoExpedica = null;
+					RetornoEtiqueta retornEtiqueta = getEtiqueta(token, retornoExpedica.getRetorno().getExpedicao().getId());
 
-					if (separa.getIdOrigemVinc() > 0)
-						retornoExpedica = getExpedicao(token, separa.getIdOrigemVinc(), separa.getObjOrigemVinc());
-					else
-						retornoExpedica = getExpedicao(token, separa.getIdOrigem(), separa.getObjOrigem());
-
-					if (retornoExpedica != null && retornoExpedica.getRetorno() != null &&
-						retornoExpedica.getRetorno().getExpedicao() != null)
+					if (retornEtiqueta != null && retornEtiqueta.getRetorno() != null)
 					{
-						RetornoEtiqueta retornEtiqueta = getEtiqueta(token, retornoExpedica.getRetorno().getExpedicao().getId());
+						retornEtiqueta = retornEtiqueta.getRetorno();
 
-						if (retornEtiqueta != null && retornEtiqueta.getRetorno() != null)
+						if (retornEtiqueta.getLinks() != null)
 						{
-							retornEtiqueta = retornEtiqueta.getRetorno();
-
-							if (retornEtiqueta.getLinks() != null)
-							{
-								for (LinkEtiqueta link : retornEtiqueta.getLinks())
-								{
-									if (etiquetasLidas.contains(link.getLink()))
-										continue;
-									
-									links.add(link);
-									etiquetasLidas.add(link.getLink());
-								}
+							for (LinkEtiqueta link : retornEtiqueta.getLinks())
+							{							
+								links.add(link);
+								separacoesLida.add(separa.getId());
 							}
 						}
 					}
@@ -142,10 +131,84 @@ public class Comunica
        return retorno;
 	}
 	
-	private RetornoSeparacao getSeparacao(String token) throws IOException
+	private List<Separacao> getSeparacaos(String token) throws IOException
+	{
+		RetornoSeparacao retornoSepara = getSeparacao(token,1);
+		List<Separacao> separacaos = null;
+		int numeroPag = 0;
+
+		if (retornoSepara != null && retornoSepara.getRetorno() != null)
+		{
+			retornoSepara = retornoSepara.getRetorno();
+			numeroPag = retornoSepara.getNumeroPaginas();
+
+			if (retornoSepara.getStatusProcessamento() == 3 && retornoSepara.getCodigoErro() == 0)
+			{
+				separacaos = new ArrayList<>();
+
+				if (numeroPag > 1)
+				{
+					for (Separacao separacao : retornoSepara.getSeparacoes()) 
+					{
+						if (! Util.comaparaData(separacao.getDataCheckOut()) )
+							continue;
+
+						if (separacoesLida.contains(separacao.getId()))
+							continue;
+
+						separacaos.add(separacao);
+					}
+
+					retornoSepara = null;
+
+					for (int i = 2; i <= numeroPag; i++) 
+					{
+						retornoSepara =	getSeparacao(token, i);
+						
+						if (retornoSepara != null && retornoSepara.getRetorno() != null)
+						{
+							retornoSepara = retornoSepara.getRetorno();
+
+							if (retornoSepara.getStatusProcessamento() == 3 && retornoSepara.getCodigoErro() == 0)
+							{
+								for (Separacao separacao : retornoSepara.getSeparacoes()) 
+								{
+									if (! Util.comaparaData(separacao.getDataCheckOut()) )
+										continue;
+			
+									if (separacoesLida.contains(separacao.getId()))
+										continue;
+			
+									separacaos.add(separacao);
+								}
+							}
+						}
+						
+					}
+				}
+				else if (retornoSepara.getNumeroPaginas() == 1)
+				{
+					for (Separacao separacao : retornoSepara.getSeparacoes()) 
+					{
+						if (! Util.comaparaData(separacao.getDataCheckOut()) )
+							continue;
+
+						if (separacoesLida.contains(separacao.getId()))
+							continue;
+
+						separacaos.add(separacao);
+					}
+				}
+			}
+		}
+
+		return separacaos;
+	}
+
+	private RetornoSeparacao getSeparacao(String token, int nummeroPag) throws IOException
 	{
 		logger.info("Buscando separacao");
-        URL url = new URL(UrlsTiny.getSeparacao(token));
+        URL url = new URL(UrlsTiny.getSeparacao(token, nummeroPag));
         HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
 
         if (conexao.getResponseCode() != 200)
@@ -168,7 +231,7 @@ public class Comunica
     public EnumRetorno verificaConexao(String token) throws Exception
     {
 		logger.info("verificando conexao");
-    	RetornoSeparacao retorno = getSeparacao(token);
+    	RetornoSeparacao retorno = getSeparacao(token, 1);
     	
 		logger.info("Retorno da busca" + retorno.toString());
 
@@ -189,8 +252,8 @@ public class Comunica
     		return EnumRetorno.ERRO_HEADER;
     }
 
-	public List<String> getNfLidas()
+	public List<Integer> getSeparacoesLidas()
 	{
-		return etiquetasLidas;
+		return separacoesLida;
 	}
 }

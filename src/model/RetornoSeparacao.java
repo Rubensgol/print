@@ -4,7 +4,7 @@ import java.util.List;
 
 public class RetornoSeparacao
 {
-	private int status_processamento, codigo_erro;
+	private int status_processamento, codigo_erro, numero_paginas;
 	private String status;
 	private RetornoSeparacao retorno;
 	private List<Separacao> separacoes;
@@ -62,5 +62,15 @@ public class RetornoSeparacao
 	public void setAgrupamentos(List<Separacao> separacoes)
 	{
 		this.separacoes = separacoes;
+	}
+
+	public int getNumeroPaginas()
+	{
+		return numero_paginas;
+	}
+
+	public void setNumeroPaginas(int numero_paginas)
+	{
+		this.numero_paginas = numero_paginas;
 	}
 }

@@ -1,4 +1,4 @@
 /** todo 
-log nas respostas da consulta
-verificar se o idrela esta preenchiudo e usar ele
+
+criar um processo paralelo para verificar quantas paginas sao e ir buscand
 **/

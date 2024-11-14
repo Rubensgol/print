@@ -16,7 +16,7 @@ public class TrataArquivo implements ITrataArquivo
 {
     private static final Logger logger = Logger.getLogger(TrataArquivo.class.getName());
 
-    public void salvaTxt(List<String> nfLidas)
+    public void salvaTxt(List<Integer> nfLidas)
     {
         try
         {
@@ -24,7 +24,7 @@ public class TrataArquivo implements ITrataArquivo
             FileWriter myWriter = new FileWriter(Util.getDataFormatadaSemBarra() + ".txt");
 
             logger.info("Salvando arquivo com as nfs lidas");
-            for (String integer : nfLidas)
+            for (Integer integer : nfLidas)
             {
                 logger.info("Salvando a nf: " + integer);
                 myWriter.write(integer.toString());
@@ -39,9 +39,9 @@ public class TrataArquivo implements ITrataArquivo
         }
     }
 
-    public List<String> carregaArquivo()
+    public List<Integer> carregaArquivo()
     {
-        List<String> nfs = new ArrayList<>();
+        List<Integer> nfs = new ArrayList<>();
 
         logger.info("Carregando arquivo das nfs");
         String fileName = Util.getDataFormatadaSemBarra();
@@ -59,7 +59,7 @@ public class TrataArquivo implements ITrataArquivo
                 while (myReader.hasNextLine())
                 {
                     data = myReader.nextLine();
-                    nfs.add(data);
+                    nfs.add(Integer.parseInt(data));
                     logger.info("Carregado nf: " + data);
                 }
     
