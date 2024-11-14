@@ -14,11 +14,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import controler.IImprimir;
-import controler.ITrataArquivo;
-import main.Comunica;
-import main.Imprimir;
-import main.TrataArquivo;
+import controler.interfaces.IImprimir;
+import controler.interfaces.ITrataArquivo;
+import controler.business.TrataArquivo;
+import controler.business.comunicaTiny.Comunica;
+import controler.business.imprimir.Imprimir;
 import model.EnumRetorno;
 import model.LinkEtiqueta;
 
@@ -37,7 +37,7 @@ public class Tela extends JFrame
 	private boolean buscando = false;
 	private ITrataArquivo aTrataArquivo;
 
-	public Tela(List<Integer> lidas)
+	public Tela(List<String> lidas)
 	{
 		try 
 		{
@@ -96,7 +96,7 @@ public class Tela extends JFrame
 							break;
 						}
 
-						Thread.sleep(1000);
+						Thread.sleep(5000);
 					}
 				}
 				catch (Exception e1) 

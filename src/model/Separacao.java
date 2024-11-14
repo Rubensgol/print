@@ -5,6 +5,8 @@ public class Separacao
 	private int id;
 	private int idOrigem;
 	private String objOrigem;
+	private int idOrigemVinc;
+	private String objOrigemVinc;
 
 	public int getId() 
 	{
@@ -34,5 +36,20 @@ public class Separacao
 	public void setObjOrigem(String objOrigem) 
 	{
 		this.objOrigem = objOrigem;
+	}
+
+	public int getIdOrigemVinc()
+	{
+		return idOrigemVinc;
+	}
+
+	public void setIdOrigemVinc(int idOrigemVinc)
+	{
+		this.idOrigemVinc = idOrigemVinc;
+	}
+
+	public String getObjOrigemVinc()
+	{
+		return objOrigemVinc;
 	}
 }

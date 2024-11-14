@@ -3,6 +3,7 @@ package model;
 public class Expedicao 
 {
 	private int id;
+	private int situacao;
 
 	public int getId() 
 	{
@@ -12,5 +13,15 @@ public class Expedicao
 	public void setId(int id) 
 	{
 		this.id = id;
+	}
+
+	public int getSituacao()
+	{
+		return situacao;
+	}
+
+	public void setSituacao(int situacao)
+	{
+		this.situacao = situacao;
 	}
 }
