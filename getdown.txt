@@ -1,0 +1,11 @@
+# The URL from which the client is downloaded
+appbase = https://github.com/print
+
+# UI Configuration
+ui.name = Program
+
+# Application jar files
+code = print.jar
+
+# The main entry point for the application
+class = src.Program
