@@ -2,7 +2,7 @@ package test;
 
 import java.io.IOException;
 
-import controler.business.atualizar.update4j.CriaConfig;
+import geraConfig.CriaConfig;
 
 public class geraConfigExe 
 {

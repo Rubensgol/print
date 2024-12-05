@@ -1,4 +1,4 @@
-package controler.business.atualizar.update4j;
+package geraConfig;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -14,7 +14,7 @@ public class CriaConfig
     {
         Configuration config = Configuration.builder()
                         .baseUri("https://github.com/rubensgolSecret/print/blob/main")
-                        .basePath("${user.dir}/print")
+                        .basePath("${user.dir}/")
                         .file(FileMetadata.readFrom("print.jar").path("print.jar").classpath())
 
                         .build();

@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import org.update4j.Archive;
 import org.update4j.Configuration;
 import org.update4j.UpdateOptions;
+import org.update4j.UpdateOptions.ArchiveUpdateOptions;
 
 import controler.interfaces.IAtualiza;
 
@@ -23,11 +24,13 @@ public class AtualizaUpdate4j implements IAtualiza
     public void atualiza() 
     {
         Path zip = Paths.get("print-update.zip");
-
+        ArchiveUpdateOptions arqv;
+        
         try 
         {
-            if(config.update(UpdateOptions.archive(zip)).getException() == null) 
-                Archive.read(zip).install();
+            arqv = UpdateOptions.archive(zip);
+
+            Archive.read(zip).install();
         }
         catch (IOException e) 
         {
