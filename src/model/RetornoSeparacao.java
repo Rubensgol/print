@@ -73,4 +73,12 @@ public class RetornoSeparacao
 	{
 		this.numero_paginas = numero_paginas;
 	}
+
+	@Override
+	public String toString() 
+	{
+		return "RetornoSeparacao [status_processamento=" + status_processamento + ", codigo_erro=" + codigo_erro
+				+ ", numero_paginas=" + numero_paginas + ", status=" + status + ", retorno=" + retorno + ", separacoes="
+				+ separacoes + "]";
+	}
 }

@@ -4,7 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.FileHandler;
@@ -32,7 +33,8 @@ public class Comunica
 	{
 		try 
 		{
-			FileHandler fh = new FileHandler("Log-" + Util.getDataFormatadaSemBarra() + ".log");
+			FileHandler fh = new FileHandler("log/log-" + Util.getDataFormatadaSemBarra() + "-comunica.log");
+			fh.setEncoding("UTF-8");
 			logger.addHandler(fh);
 			logger.setUseParentHandlers(false);
 			fh.setFormatter(new SimpleFormatter());	
@@ -46,7 +48,7 @@ public class Comunica
 		this.separacoesLida = separacoesLida;
 	}
 
-	public List<LinkEtiqueta> getEtiquetas(String token) throws IOException
+	public List<LinkEtiqueta> getEtiquetas(String token) throws IOException, URISyntaxException
 	{
 		List<LinkEtiqueta> links = new ArrayList<>();
 
@@ -83,55 +85,55 @@ public class Comunica
 			}
 		}
 
-        return links;
+		return links;
 	}
 	
-	private RetornoEtiqueta getEtiqueta(String token, int idExpedi) throws IOException
+	private RetornoEtiqueta getEtiqueta(String token, int idExpedi) throws IOException, URISyntaxException
 	{
 		logger.info("buscando etiqueta");
 		Gson gson = new Gson();
-		URL url = new URL(UrlsTiny.getEtiqueta(token, idExpedi));
-		HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
+		URI url = new URI(UrlsTiny.getEtiqueta(token, idExpedi));
+		HttpURLConnection conexao = (HttpURLConnection) url.toURL().openConnection();
 
-        if (conexao.getResponseCode() != 200)
+		if (conexao.getResponseCode() != 200)
 		{
 			logger.info("problema de conexcao" + conexao.getResponseMessage());
 			return null;
 		}
 
-        BufferedReader resposta = new BufferedReader(new InputStreamReader((conexao.getInputStream())));
-        String jsonEmString = Util.converteJsonEmString(resposta);
-        
+		BufferedReader resposta = new BufferedReader(new InputStreamReader((conexao.getInputStream())));
+		String jsonEmString = Util.converteJsonEmString(resposta);
+		
 		logger.info("retorno da busca" + jsonEmString);
-        RetornoEtiqueta retorno = gson.fromJson(jsonEmString, RetornoEtiqueta.class);
-        
-        return retorno;
+		RetornoEtiqueta retorno = gson.fromJson(jsonEmString, RetornoEtiqueta.class);
+		
+		return retorno;
 	}
 	
-	private Expedica getExpedicao(String token, int idNota, String tipoObjeto) throws IOException
+	private Expedica getExpedicao(String token, int idNota, String tipoObjeto) throws IOException, URISyntaxException
 	{
 		logger.info("Buscando expedicao");
-        URL url = new URL(UrlsTiny.getExpedicao(token, idNota, tipoObjeto));
-        HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
+		URI url = new URI(UrlsTiny.getExpedicao(token, idNota, tipoObjeto));
+		HttpURLConnection conexao = (HttpURLConnection) url.toURL().openConnection();
 
-        if (conexao.getResponseCode() != 200)
+		if (conexao.getResponseCode() != 200)
 		{
 			logger.severe("problema de conexao");
-        	return null;
+			return null;
 		}
 
-        BufferedReader resposta = new BufferedReader(new InputStreamReader((conexao.getInputStream())));
-        String jsonEmString = Util.converteJsonEmString(resposta);
+		BufferedReader resposta = new BufferedReader(new InputStreamReader((conexao.getInputStream())));
+		String jsonEmString = Util.converteJsonEmString(resposta);
 
-		logger.info("retorno da busca" + jsonEmString);
+		logger.info("Busca de expedicao concluida");
 
-        Gson gson = new Gson();
-        Expedica retorno = gson.fromJson(jsonEmString, Expedica.class);
+		Gson gson = new Gson();
+		Expedica retorno = gson.fromJson(jsonEmString, Expedica.class);
 
-       return retorno;
+	   return retorno;
 	}
 	
-	private List<Separacao> getSeparacaos(String token) throws IOException
+	private List<Separacao> getSeparacaos(String token) throws IOException, URISyntaxException
 	{
 		RetornoSeparacao retornoSepara = getSeparacao(token,1);
 		List<Separacao> separacaos = null;
@@ -205,11 +207,12 @@ public class Comunica
 		return separacaos;
 	}
 
-	private RetornoSeparacao getSeparacao(String token, int nummeroPag) throws IOException
+	private RetornoSeparacao getSeparacao(String token, int nummeroPag) throws IOException, URISyntaxException
 	{
 		logger.info("Buscando separacao");
-        URL url = new URL(UrlsTiny.getSeparacao(token, nummeroPag));
-        HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
+        URI url = new URI(UrlsTiny.getSeparacao(token, nummeroPag));
+
+        HttpURLConnection conexao = (HttpURLConnection) url.toURL().openConnection();
 
         if (conexao.getResponseCode() != 200)
 		{
@@ -220,7 +223,7 @@ public class Comunica
         BufferedReader resposta = new BufferedReader(new InputStreamReader((conexao.getInputStream())));
         String jsonEmString = Util.converteJsonEmString(resposta);
 
-		logger.info("retorno da busca" + jsonEmString);
+		logger.info("busca de separacao concluida");
 
         Gson gson = new Gson();
         RetornoSeparacao retorno = gson.fromJson(jsonEmString, RetornoSeparacao.class);
@@ -233,12 +236,10 @@ public class Comunica
 		logger.info("verificando conexao");
     	RetornoSeparacao retorno = getSeparacao(token, 1);
     	
-		logger.info("Retorno da busca" + retorno.toString());
-
     	if (retorno == null || retorno.getRetorno() == null)
     		return EnumRetorno.ERROR_404;
     	
-		logger.info("Retorno da busca" + retorno.toString());
+		logger.info("Retorno da busca" + retorno.getStatus());
 	
     	retorno = retorno.getRetorno();
     	

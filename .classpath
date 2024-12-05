@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java-11-openjdk-amd64">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-23"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry exported="true" kind="lib" path="/home/aramis/Documentos/Printer/jar/pdfbox-app-3.0.3.jar"/>
-	<classpathentry exported="true" kind="lib" path="/home/aramis/Documentos/Printer/jar/gson-2.8.6.jar"/>
-	<classpathentry kind="lib" path="/home/aramis/Documentos/Printer/jar/log4j-1.2-api-2.12.4.jar"/>
+	<classpathentry kind="lib" path="c:/Users/arali/eclipse-workspace/print/jar/gson-2.8.6.jar"/>
+	<classpathentry kind="lib" path="c:/Users/arali/eclipse-workspace/print/jar/pdfbox-app-3.0.3.jar"/>
+	<classpathentry kind="lib" path="c:/Users/arali/eclipse-workspace/print/jar/itextpdf-5.5.13.3.jar"/>
+	<classpathentry kind="lib" path="c:/Users/arali/eclipse-workspace/print/jar/update4j-1.5.9.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

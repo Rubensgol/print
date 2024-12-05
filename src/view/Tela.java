@@ -6,19 +6,22 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import controler.interfaces.IImprimir;
 import controler.interfaces.ITrataArquivo;
 import controler.business.TrataArquivo;
 import controler.business.comunicaTiny.Comunica;
-import controler.business.imprimir.Imprimir;
+import controler.business.imprimir.ImprimirDesktop;
 import model.EnumRetorno;
 import model.LinkEtiqueta;
 
@@ -30,6 +33,8 @@ public class Tela extends JFrame
 	private JTextField tToken;
 	private JLabel lToken;
 	private JButton bIniciar, bParar;
+	private JProgressBar pBuscando;
+
 	private Container c;
 	private Comunica comunica;
 	private IImprimir imprimir;
@@ -43,7 +48,7 @@ public class Tela extends JFrame
 		{
 			c = getContentPane();
 			comunica = new Comunica(lidas);
-			imprimir = new Imprimir();
+			imprimir = new ImprimirDesktop();
 			aTrataArquivo = new TrataArquivo();
  
 			panel = new JPanel(new FlowLayout());
@@ -55,54 +60,59 @@ public class Tela extends JFrame
             tToken = new JTextField(20);
             panel.add(tToken);
 
-            c.add(panel, BorderLayout.WEST);
+            c.add(panel, BorderLayout.NORTH);
 
 			bIniciar = new JButton("Iniciar");
 			bIniciar.setVisible(true);
 			bIniciar.addActionListener(e ->
 			{
-				try
-				{
 					buscando = true;
+					setBotoes(buscando);	
 
 					if (tToken.getText() == null || tToken.getText().trim().equals(""))
 					{
 						new TelaErro(EnumRetorno.ERRO_EM_BRANCO);
 						buscando = false;
+						setBotoes(buscando);
+
 						return;
 					}
 
-					while (buscando)
+					SwingUtilities.invokeLater(() ->
 					{
-						EnumRetorno retorno = comunica.verificaConexao(tToken.getText());
-
-						if (retorno == EnumRetorno.SUCESSO || retorno == EnumRetorno.SUCESSO_EM_BRANCO)
+						try
 						{
-							tToken.setEnabled(! buscando);
-							bIniciar.setEnabled(! buscando);
-							bParar.setEnabled(buscando);		
-
-							links = comunica.getEtiquetas(tToken.getText());
-
-							for (LinkEtiqueta link : links)
-								imprimir.imprimir(link.getLink());
-							
-							aTrataArquivo.salvaTxt(comunica.getSeparacoesLidas());
+							while (buscando)
+							{
+								EnumRetorno retorno = comunica.verificaConexao(tToken.getText());
+		
+								if (retorno == EnumRetorno.SUCESSO || retorno == EnumRetorno.SUCESSO_EM_BRANCO)
+								{
+									setBotoes(buscando);		
+		
+									links = comunica.getEtiquetas(tToken.getText());
+		
+									for (LinkEtiqueta link : links)
+										imprimir.imprimir(link.getLink());
+									
+									aTrataArquivo.salvaTxt(comunica.getSeparacoesLidas());
+								}
+								else
+								{
+									new TelaErro(EnumRetorno.ERRO_TOKEN);
+									buscando = false;
+									setBotoes(buscando);
+									break;
+								}
+		
+								TimeUnit.MILLISECONDS.sleep(5000);
+							}
 						}
-						else
+						catch (Exception e1) 
 						{
-							new TelaErro(EnumRetorno.ERRO_TOKEN);
-							buscando = false;
-							break;
+						  e1.printStackTrace();
 						}
-
-						Thread.sleep(5000);
-					}
-				}
-				catch (Exception e1) 
-				{
-				  e1.printStackTrace();
-				}
+					});
 			});
 			
 			panelBotao = new JPanel(new FlowLayout());
@@ -112,16 +122,17 @@ public class Tela extends JFrame
 			bParar.addActionListener(e ->
 			{
 				buscando = false;
-				tToken.setEnabled(! buscando);
-				bIniciar.setEnabled(! buscando);
-				bParar.setEnabled(buscando);
+				setBotoes(buscando);
 				aTrataArquivo.salvaTxt(comunica.getSeparacoesLidas());
 			});
 
 			bParar.setEnabled(buscando);
 			panelBotao.add(bParar);
 	   
-			c.add(panelBotao, BorderLayout.SOUTH);
+			c.add(panelBotao, BorderLayout.CENTER);
+
+			pBuscando = new JProgressBar();
+			c.add(pBuscando, BorderLayout.SOUTH);
 
 			setTitle("Imprimir etiquetas");
 			setIconImage(getIcone());
@@ -137,6 +148,15 @@ public class Tela extends JFrame
 		}
 	}
 	
+	
+	private void setBotoes(boolean buscando)
+	{
+		tToken.setEnabled(! buscando);
+		bIniciar.setEnabled(! buscando);
+		bParar.setEnabled(buscando);
+		pBuscando.setIndeterminate(buscando);
+	}
+
 	private Image getIcone()
 	{
 		ImageIcon icon = new ImageIcon("src/print_ico.png");

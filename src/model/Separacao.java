@@ -63,4 +63,11 @@ public class Separacao
 	{
 		return dataCheckout;
 	}
+
+	@Override
+	public String toString() 
+	{
+		return "Separacao [id=" + id + ", idOrigem=" + idOrigem + ", objOrigem=" + objOrigem + ", idOrigemVinc="
+				+ idOrigemVinc + ", objOrigemVinc=" + objOrigemVinc + ", dataCheckout=" + dataCheckout + "]";
+	}
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<update4j>
+  <application>
+    <name>Print</name>
+    <version>1.0.0</version>
+  </application>
+  <update>
+    <url>https://github.com/rubensgolSecret/print</url>
+    <frequency>daily</frequency>
+  </update>
+</update4j>
