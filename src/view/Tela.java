@@ -141,7 +141,7 @@ public class Tela extends JFrame
 				if (atualiza.temAtualizacao())
 					atualiza.atualiza();
 				else
-					System.out.println("nao vai");
+					new TelaErro(EnumRetorno.APLICATIVO_JA_ATUALIZADO);
 			});
 
 			panelBotao.add(bAtualizar);

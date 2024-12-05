@@ -27,17 +27,29 @@ public class Program
 
         nfsLidas = arqv.carregaArquivo();
 
+		URL configUrl;
         Configuration config = null;
         Reader in;
 
         try 
         {
-            in = Files.newBufferedReader(Paths.get("config.xml"));
+            configUrl = new URI("https://raw.githubusercontent.com/rubensgolSecret/print/refs/heads/main/config.xml").toURL();
+            in = new InputStreamReader(configUrl.openStream(), StandardCharsets.UTF_8);
             config = Configuration.read(in);
         }
-        catch (IOException e1) 
+        catch (IOException | URISyntaxException e) 
         {
-            e1.printStackTrace();
+            System.err.println("Could not load remote config, falling back to local.");
+
+            try 
+            {
+                in = Files.newBufferedReader(Paths.get("config.xml"));
+                config = Configuration.read(in);
+            }
+            catch (IOException e1) 
+            {
+                e1.printStackTrace();
+            }
         }
 
     	new Tela(nfsLidas, config);

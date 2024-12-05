@@ -19,7 +19,7 @@ public class CriaConfig
 
                         .build();
 
-        try (Writer out = Files.newBufferedWriter(Paths.get("config.xml"))) 
+        try (Writer out = Files.newBufferedWriter(Paths.get("config/config.xml"))) 
         {
             config.write(out);
         }
