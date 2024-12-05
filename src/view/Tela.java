@@ -17,9 +17,13 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import org.update4j.Configuration;
+
+import controler.interfaces.IAtualiza;
 import controler.interfaces.IImprimir;
 import controler.interfaces.ITrataArquivo;
 import controler.business.TrataArquivo;
+import controler.business.atualizar.update4j.AtualizaUpdate4j;
 import controler.business.comunicaTiny.Comunica;
 import controler.business.imprimir.ImprimirDesktop;
 import model.EnumRetorno;
@@ -32,7 +36,7 @@ public class Tela extends JFrame
 	private JPanel panel, panelBotao;
 	private JTextField tToken;
 	private JLabel lToken;
-	private JButton bIniciar, bParar;
+	private JButton bIniciar, bParar, bAtualizar;
 	private JProgressBar pBuscando;
 
 	private Container c;
@@ -41,8 +45,9 @@ public class Tela extends JFrame
 	private List<LinkEtiqueta> links;
 	private boolean buscando = false;
 	private ITrataArquivo aTrataArquivo;
+	private IAtualiza atualiza;
 
-	public Tela(List<Integer> lidas)
+	public Tela(List<Integer> lidas, Configuration config)
 	{
 		try 
 		{
@@ -50,6 +55,7 @@ public class Tela extends JFrame
 			comunica = new Comunica(lidas);
 			imprimir = new ImprimirDesktop();
 			aTrataArquivo = new TrataArquivo();
+			atualiza = new AtualizaUpdate4j(config);
  
 			panel = new JPanel(new FlowLayout());
             panel.setSize(new Dimension(300,300));
@@ -128,6 +134,17 @@ public class Tela extends JFrame
 
 			bParar.setEnabled(buscando);
 			panelBotao.add(bParar);
+
+			bAtualizar = new JButton("Atualizar");
+			bAtualizar.addActionListener(e ->
+			{
+				if (atualiza.temAtualizacao())
+					atualiza.atualiza();
+				else
+					System.out.println("nao vai");
+			});
+
+			panelBotao.add(bAtualizar);
 	   
 			c.add(panelBotao, BorderLayout.CENTER);
 
