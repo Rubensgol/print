@@ -33,7 +33,7 @@ public class Program
 
         try 
         {
-            configUrl = new URI("https://raw.githubusercontent.com/rubensgolSecret/print/refs/heads/main/config.xml").toURL();
+            configUrl = new URI("https://raw.githubusercontent.com/rubensgolSecret/print/refs/heads/main/config/config.xml").toURL();
             in = new InputStreamReader(configUrl.openStream(), StandardCharsets.UTF_8);
             config = Configuration.read(in);
         }
@@ -43,7 +43,7 @@ public class Program
 
             try 
             {
-                in = Files.newBufferedReader(Paths.get("config.xml"));
+                in = Files.newBufferedReader(Paths.get("config/config.xml"));
                 config = Configuration.read(in);
             }
             catch (IOException e1) 
