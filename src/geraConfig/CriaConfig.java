@@ -13,7 +13,7 @@ public class CriaConfig
     public void geraConfig() throws IOException
     {
         Configuration config = Configuration.builder()
-                        .baseUri("https://github.com/rubensgolSecret/print/blob/main")
+                        .baseUri("https://github.com/rubensgolSecret/print/raw/refs/heads/main/config/print.jar")
                         .basePath("${user.dir}/config/")
                         .file(FileMetadata.readFrom("print.jar").path("print.jar").classpath())
 
