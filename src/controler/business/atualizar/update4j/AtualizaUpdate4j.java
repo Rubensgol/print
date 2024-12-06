@@ -33,6 +33,8 @@ public class AtualizaUpdate4j implements IAtualiza, UpdateHandler
 
             if(config.update(arqv).getException() == null)
                 Archive.read(zip).install();
+
+            config.launch();
         }
         catch (IOException e) 
         {

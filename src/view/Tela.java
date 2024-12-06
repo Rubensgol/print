@@ -135,7 +135,7 @@ public class Tela extends JFrame
 			bParar.setEnabled(buscando);
 			panelBotao.add(bParar);
 
-			bAtualizar = new JButton("Atualizar");
+			bAtualizar = new JButton("Atualizar botao funcionou");
 			bAtualizar.addActionListener(e ->
 			{
 				if (atualiza.temAtualizacao())
