@@ -8,10 +8,11 @@ import org.update4j.Archive;
 import org.update4j.Configuration;
 import org.update4j.UpdateOptions;
 import org.update4j.UpdateOptions.ArchiveUpdateOptions;
+import org.update4j.service.UpdateHandler;
 
 import controler.interfaces.IAtualiza;
 
-public class AtualizaUpdate4j implements IAtualiza
+public class AtualizaUpdate4j implements IAtualiza, UpdateHandler
 {
     private Configuration config;
 
@@ -25,12 +26,13 @@ public class AtualizaUpdate4j implements IAtualiza
     {
         Path zip = Paths.get("print-update.zip");
         ArchiveUpdateOptions arqv;
-        
+
         try 
         {
-            arqv = UpdateOptions.archive(zip);
+            arqv = UpdateOptions.archive(zip).updateHandler(AtualizaUpdate4j.this);
 
-            Archive.read(zip).install();
+            if(config.update(arqv).getException() == null)
+                Archive.read(zip).install();
         }
         catch (IOException e) 
         {

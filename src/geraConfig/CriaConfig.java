@@ -15,11 +15,11 @@ public class CriaConfig
         Configuration config = Configuration.builder()
                         .baseUri("https://github.com/rubensgolSecret/print/raw/refs/heads/main/config/print.jar")
                         .basePath("${user.dir}/config/")
-                        .file(FileMetadata.readFrom("print.jar").path("print.jar").classpath())
+                        .file(FileMetadata.readFrom("print.jar").classpath())
 
                         .build();
 
-        try (Writer out = Files.newBufferedWriter(Paths.get("config/config.xml"))) 
+        try (Writer out = Files.newBufferedWriter(Paths.get("src/config/config.xml"))) 
         {
             config.write(out);
         }
