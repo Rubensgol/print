@@ -15,7 +15,7 @@ public class CriaConfig
         Configuration config = Configuration.builder()
                         .baseUri("https://github.com/rubensgolSecret/print/raw/refs/heads/main/src/config/print.jar")
                         .basePath("${user.dir}/src/config/")
-                        .file(FileMetadata.readFrom("print.jar").classpath())
+                        .file(FileMetadata.readFrom("src/config/print.jar").classpath())
 
                         .build();
 
