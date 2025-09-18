@@ -55,7 +55,7 @@ jobs:
         run: mvn -DskipTests package
 
       - name: Run packaging script for ${{ matrix.arch }}
-        run: pwsh scripts\package-windows.ps1 -AppVersion ${{ github.ref_name }} -JfxVersion 21.0.0 -Arch ${{ matrix.arch }}
+        run: pwsh scripts\package-windows.ps1 -AppVersion ${{ github.ref_name }} -JfxVersion 21 -Arch ${{ matrix.arch }}
 
       # --- DETETIVE Nº 1 ---
       # Esta etapa mostrará o que realmente existe na pasta 'dist' antes do upload.
