@@ -114,9 +114,39 @@ if (-not (Test-Path $destDirCandidate)) {
 }
 $destDir = (Resolve-Path $destDirCandidate).Path
 
+# Sanitize AppVersion for Windows MSI (must be numeric A.B.C, each 0-255, no 'v')
+function Get-MsiProductVersion {
+  param([string]$ver)
+  if (-not $ver) { return '1.0.0' }
+  # strip leading v/V
+  $v = $ver -replace '^[vV]', ''
+  # drop prerelease/build metadata (after '-' or '+')
+  $v = $v -replace '[-+].*$', ''
+  # keep only digits and dots
+  $v = ($v -replace '[^0-9\.]', '')
+  # split and take up to 3 parts
+  $parts = @($v -split '\.') | Where-Object { $_ -ne '' }
+  if ($parts.Count -eq 0) { return '1.0.0' }
+  while ($parts.Count -lt 3) { $parts += '0' }
+  if ($parts.Count -gt 3) { $parts = $parts[0..2] }
+  # clamp to 0-255 just in case
+  $nums = @()
+  foreach ($p in $parts) {
+    $n = 0
+    try { $n = [int]$p } catch { $n = 0 }
+    if ($n -lt 0) { $n = 0 }
+    if ($n -gt 255) { $n = 255 }
+    $nums += $n
+  }
+  return ($nums -join '.')
+}
+
+$MsiVersion = Get-MsiProductVersion -ver $AppVersion
+Write-Host "Using MSI ProductVersion: $MsiVersion (from AppVersion '$AppVersion')"
+
  $args = @(
     '--name', $AppName,
-    '--app-version', $AppVersion,
+    '--app-version', $MsiVersion,
     '--input', (Resolve-Path "$scriptDir\..\target"),
     '--main-jar', $targetJarName,
     '--main-class', $MainClass,
