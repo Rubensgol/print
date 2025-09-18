@@ -59,41 +59,22 @@ jobs:
     needs: build-and-package
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write # A permissão continua necessária
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-
-      - name: Download artifacts (x64)
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: installer-x64
+          path: artifacts # Baixa todos os artefatos para uma pasta chamada "artifacts"
 
-      - name: Download artifacts (x86)
-        uses: actions/download-artifact@v4
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
         with:
-          name: installer-x86
-
-      - name: Upload release assets (x64)
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./installer-x64/*.msi
-          asset_name: ${{ github.ref_name }}-windows-x64.msi
-          asset_content_type: application/x-msi
-
-      - name: Upload release assets (x86)
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./installer-x86/*.msi
-          asset_name: ${{ github.ref_name }}-windows-x86.msi
-          asset_content_type: application/x-msi
+          # O token é lido automaticamente, mas é bom ser explícito
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # O nome da release será o mesmo da tag
+          name: Release ${{ github.ref_name }}
+          # Pega todos os arquivos .msi da pasta onde foram baixados
+          files: |
+            artifacts/installer-x64/*.msi
+            artifacts/installer-x86/*.msi
