@@ -23,7 +23,7 @@
 
         <!-- Dependencies installed locally to the Maven repository -->
         <dependency>
-            <groupId>io.github.update4j</groupId>
+            <groupId>org.update4j</groupId>
             <artifactId>update4j</artifactId>
             <version>1.5.9</version>
         </dependency>

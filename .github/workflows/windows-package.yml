@@ -25,11 +25,29 @@ jobs:
       - name: Install WiX (for MSI)
         run: choco install wixtoolset -y
 
+      - name: Install local JARs from jar/
+        shell: pwsh
+        run: |
+          if (Test-Path "jar") {
+            Write-Host "Found jar/ directory. Installing local JARs to Maven local repository..."
+            Get-ChildItem -Path jar -Filter "*.jar" | ForEach-Object {
+              $name = $_.BaseName.ToLower()
+              if ($name -like '*update4j*') {
+                Write-Host "Skipping installation of $($_.Name) (update4j is resolved from Maven Central)"
+              } else {
+                Write-Host "Installing $($_.FullName)"
+                & mvn install:install-file -Dfile="$($_.FullName)" -DgroupId="local.jars" -DartifactId="$($_.BaseName)" -Dversion="1.0.0-local" -Dpackaging=jar
+              }
+            }
+          } else {
+            Write-Host "No jar/ directory found; skipping local JAR install."
+          }
+
       - name: Build with Maven
         run: mvn -DskipTests package
 
       - name: Run packaging script for ${{ matrix.arch }}
-        run: pwsh scripts\package-windows.ps1 -AppVersion ${{ github.ref_name }} -JfxVersion 21.0.0 -JdkPath "${{ env.JAVA_HOME }}" -Arch ${{ matrix.arch }}
+        run: pwsh scripts\package-windows.ps1 -AppVersion ${{ github.ref_name }} -JfxVersion 21.0.0 -Arch ${{ matrix.arch }}
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
