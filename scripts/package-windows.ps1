@@ -1,25 +1,17 @@
-<#
-  scripts/package-windows.ps1
-  Versão corrigida para uso em GitHub Actions
-#>
-
 param(
   [string]$AppName = "Print",
   [string]$AppVersion = "1.0.0",
-  # CORREÇÃO 2: Removido JdkPath daqui, vamos usar a variável de ambiente.
   [string]$JfxVersion = "21.0.0",
   [ValidateSet("x64","x86")][string]$Arch = "x64",
   [string]$OutputDir = "dist",
   [string]$IconPath = "",
   [string]$MainJar = "print.jar",
   [string]$MainClass = "test.Program",
-  # CORREÇÃO 1: URL base atualizada para o Maven Central.
   [string]$BaseDownloadUrl = "https://repo1.maven.org/maven2/org/openjfx/javafx-jmods"
 )
 
 Set-StrictMode -Version Latest
 
-# CORREÇÃO 2: Usando a variável de ambiente JAVA_HOME que o GitHub Actions fornece.
 $JdkPath = $env:JAVA_HOME
 if (-not $JdkPath) {
     Throw "JAVA_HOME environment variable not set. Make sure the 'setup-java' action runs first."
@@ -32,7 +24,6 @@ $jmodsDir = Join-Path $scriptDir "build\javafx-jmods-$JfxVersion-windows-$Arch"
 
 if (-not (Test-Path $jmodsDir)) {
   Write-Host "JavaFX jmods for arch $Arch not found locally; downloading..."
-  # CORREÇÃO 1: Nome do arquivo e URL montados para o padrão do Maven Central.
   $zipName = "javafx-jmods-$JfxVersion-windows-$Arch.zip"
   $downloadUrl = "$BaseDownloadUrl/$JfxVersion/$zipName"
   $tmpZip = Join-Path $scriptDir $zipName
