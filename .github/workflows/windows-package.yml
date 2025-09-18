@@ -25,6 +25,14 @@ jobs:
       - name: Install WiX (for MSI)
         run: choco install wixtoolset -y
 
+      - name: Cache Chocolatey packages
+        uses: actions/cache@v4
+        with:
+          path: C:\ProgramData\chocolatey\lib
+          key: ${{ runner.os }}-choco-wixtoolset-v1
+
+      - name: Install WiX (for MSI)
+        run: choco install wixtoolset -y 
       - name: Install local JARs from jar/
         shell: pwsh
         run: |
