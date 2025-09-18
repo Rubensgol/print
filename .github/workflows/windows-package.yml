@@ -49,6 +49,12 @@ jobs:
       - name: Run packaging script for ${{ matrix.arch }}
         run: pwsh scripts\package-windows.ps1 -AppVersion ${{ github.ref_name }} -JfxVersion 21.0.0 -Arch ${{ matrix.arch }}
 
+      # --- DETETIVE Nº 1 ---
+      # Esta etapa mostrará o que realmente existe na pasta 'dist' antes do upload.
+      - name: Check file structure before upload
+        run: ls -R dist
+        shell: bash
+
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
@@ -60,21 +66,23 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
-      contents: write # A permissão continua necessária
+      contents: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts # Baixa todos os artefatos para uma pasta chamada "artifacts"
+          path: artifacts
+
+      # --- DETETIVE Nº 2 ---
+      # Esta etapa mostrará o que realmente foi baixado na pasta 'artifacts'.
+      - name: Check file structure after download
+        run: ls -R artifacts
 
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
-          # O token é lido automaticamente, mas é bom ser explícito
           token: ${{ secrets.GITHUB_TOKEN }}
-          # O nome da release será o mesmo da tag
           name: Release ${{ github.ref_name }}
-          # Pega todos os arquivos .msi da pasta onde foram baixados
           files: |
             artifacts/installer-x64/*.msi
             artifacts/installer-x86/*.msi
