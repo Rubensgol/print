@@ -152,7 +152,9 @@ Write-Host "Using MSI ProductVersion: $MsiVersion (from AppVersion '$AppVersion'
     '--main-class', $MainClass,
     '--runtime-image', $runtimeOut,
     '--type', 'msi',
-    '--dest', $destDir
+    '--dest', $destDir,
+    '--win-dir-chooser',
+    '--win-console'
 )
 
 if ($IconPath -ne "") { $args += @('--icon', $IconPath) }

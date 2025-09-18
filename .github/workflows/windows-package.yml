@@ -22,17 +22,17 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Install WiX (for MSI)
-        run: choco install wixtoolset -y
-
       - name: Cache Chocolatey packages
+        id: choco-cache
         uses: actions/cache@v4
         with:
           path: C:\ProgramData\chocolatey\lib
           key: ${{ runner.os }}-choco-wixtoolset-v1
 
       - name: Install WiX (for MSI)
+        if: steps.choco-cache.outputs.cache-hit != 'true'
         run: choco install wixtoolset -y 
+
       - name: Install local JARs from jar/
         shell: pwsh
         run: |
@@ -57,11 +57,30 @@ jobs:
       - name: Run packaging script for ${{ matrix.arch }}
         run: pwsh scripts\package-windows.ps1 -AppVersion ${{ github.ref_name }} -JfxVersion 21 -Arch ${{ matrix.arch }}
 
-      # --- DETETIVE Nº 1 ---
-      # Esta etapa mostrará o que realmente existe na pasta 'dist' antes do upload.
-      - name: Check file structure before upload
-        run: ls -R dist
-        shell: bash
+      - name: Code sign MSI (optional)
+        if: ${{ env.WINDOWS_PFX && env.WINDOWS_PFX_PASSWORD }}
+        shell: pwsh
+        env:
+          WINDOWS_PFX: ${{ secrets.WINDOWS_PFX }}
+          WINDOWS_PFX_PASSWORD: ${{ secrets.WINDOWS_PFX_PASSWORD }}
+          TIMESTAMP_URL: http://timestamp.digicert.com
+        run: |
+          $pfxPath = "code-signing.pfx"
+          Write-Host "Writing PFX from secret to $pfxPath"
+          [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_PFX))
+
+          $signtool = "signtool.exe"
+          Write-Host "Looking for MSI files in dist/${{ matrix.arch }}"
+          $msis = Get-ChildItem -Path "dist/${{ matrix.arch }}" -Filter *.msi -File -Recurse
+          if (-not $msis) { throw "No MSI files found to sign in dist/${{ matrix.arch }}" }
+
+          foreach ($m in $msis) {
+            Write-Host "Signing $($m.FullName)"
+            & $signtool sign /f $pfxPath /p $env:WINDOWS_PFX_PASSWORD /fd SHA256 /tr $env:TIMESTAMP_URL /td SHA256 "$($m.FullName)"
+            if ($LASTEXITCODE -ne 0) { throw "signtool sign failed for $($m.Name)" }
+            Write-Host "Verifying signature for $($m.FullName)"
+            & $signtool verify /pa /v "$($m.FullName)"
+          }
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
@@ -80,11 +99,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-
-      # --- DETETIVE Nº 2 ---
-      # Esta etapa mostrará o que realmente foi baixado na pasta 'artifacts'.
-      - name: Check file structure after download
-        run: ls -R artifacts
 
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v2
