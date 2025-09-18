@@ -105,12 +105,14 @@ if (-not $targetJarObj) {
 }
 
 $targetJarName = $targetJarObj.Name
-$destDir = (Resolve-Path (Join-Path $scriptDir "..\$OutputDir\$Arch")).Path
 
-if (-not (Test-Path $destDir)) {
-    Write-Host "Creating destination directory: $destDir"
-    New-Item -ItemType Directory -Force -Path $destDir
+# Ensure destination directory exists before resolving to absolute path
+$destDirCandidate = Join-Path $scriptDir "..\$OutputDir\$Arch"
+if (-not (Test-Path $destDirCandidate)) {
+  Write-Host "Creating destination directory: $destDirCandidate"
+  New-Item -ItemType Directory -Force -Path $destDirCandidate | Out-Null
 }
+$destDir = (Resolve-Path $destDirCandidate).Path
 
  $args = @(
     '--name', $AppName,
