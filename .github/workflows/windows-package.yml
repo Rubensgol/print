@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        arch: [ x64, x86 ]
+        arch: [ x64 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -91,6 +91,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: Release ${{ github.ref_name }}
+          body: |
+            # Lançamento ${{ github.ref_name }}
+
+            Para instalar o programa, por favor, baixe o instalador `.msi` na seção **Assets** logo abaixo. Requer Windows 64-bit.
           files: |
             artifacts/installer-x64/*.msi
-            artifacts/installer-x86/*.msi
