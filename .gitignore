@@ -6,7 +6,8 @@ target/
 
 /log
 /separacao
-/bin/
+/bin/**
+*.class
 
 ### STS ###
 .apt_generated

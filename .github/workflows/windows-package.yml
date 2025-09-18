@@ -1,0 +1,81 @@
+name: Windows package (jlink + jpackage)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch: {}
+
+jobs:
+  build-and-package:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [ x64, x86 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install WiX (for MSI)
+        run: choco install wixtoolset -y
+
+      - name: Build with Maven
+        run: mvn -DskipTests package
+
+      - name: Run packaging script for ${{ matrix.arch }}
+        run: pwsh scripts\package-windows.ps1 -AppVersion ${{ github.ref_name }} -JfxVersion 21.0.0 -JdkPath "${{ env.JAVA_HOME }}" -Arch ${{ matrix.arch }}
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.arch }}
+          path: dist/${{ matrix.arch }}
+
+  release:
+    needs: build-and-package
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Download artifacts (x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: installer-x64
+
+      - name: Download artifacts (x86)
+        uses: actions/download-artifact@v4
+        with:
+          name: installer-x86
+
+      - name: Upload release assets (x64)
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./installer-x64/*.msi
+          asset_name: ${{ github.ref_name }}-windows-x64.msi
+          asset_content_type: application/x-msi
+
+      - name: Upload release assets (x86)
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./installer-x86/*.msi
+          asset_name: ${{ github.ref_name }}-windows-x86.msi
+          asset_content_type: application/x-msi

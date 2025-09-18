@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Example update4j configuration file. Edit URLs and file entries to match your distribution layout. -->
+<configuration version="1.0">
+  <!-- Base URL where files are hosted -->
+  <base>https://example.com/print/releases/1.0.0/</base>
+
+  <!-- launcher/file that starts the application -->
+  <file path="print.jar" download="true">
+    <hash algorithm="SHA-256">REPLACE_WITH_HEX_HASH_OF_print.jar</hash>
+  </file>
+
+  <!-- supporting libraries (if any) -->
+  <file path="lib/gson-2.8.6.jar" download="true">
+    <hash algorithm="SHA-256">REPLACE_WITH_HEX_HASH</hash>
+  </file>
+
+  <!-- Example of a native resource or platform-specific archive -->
+  <file path="resources/icons/print.ico" download="true"/>
+
+  <!-- Optional metadata -->
+  <meta>
+    <entry key="app.name">Print</entry>
+    <entry key="app.version">1.0.0</entry>
+  </meta>
+</configuration>
