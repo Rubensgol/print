@@ -88,7 +88,7 @@ if (-not $jfxJmodsPath) {
 Write-Host "Creating runtime image with jlink..."
 $jlink = Join-Path $JdkPath 'bin\jlink.exe'
 $runtimeOut = Join-Path $scriptDir "build\runtime-$Arch"
-$modules = 'java.base,java.logging,java.desktop,java.xml,javafx.controls,javafx.graphics,javafx.base'
+$modules = 'java.base,java.logging,java.desktop,java.xml,javafx.controls,javafx.graphics,javafx.base,jdk.crypto.ec'
 
 # Build module-path including JDK jmods and the located JavaFX jmods directory
 $modulePath = "$JdkPath\jmods;$jfxJmodsPath"

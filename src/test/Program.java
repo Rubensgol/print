@@ -33,7 +33,8 @@ public class Program
 
         try 
         {
-            configUrl = new URI("https://github.com/rubensgolSecret/print/raw/refs/heads/main/src/config/config.xml").toURL();
+            // Prefer config from latest GitHub Release assets
+            configUrl = new URI("https://github.com/Rubensgol/print/releases/latest/download/config.xml").toURL();
             in = new InputStreamReader(configUrl.openStream(), StandardCharsets.UTF_8);
             config = Configuration.read(in);
         }

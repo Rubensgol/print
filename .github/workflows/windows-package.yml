@@ -54,17 +54,35 @@ jobs:
       - name: Build with Maven
         run: mvn -DskipTests package
 
+      - name: Prepare app jar artifact
+        shell: pwsh
+        run: |
+          $latestJar = Get-ChildItem -Path target -Filter "*.jar" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $latestJar) { throw "No jar found in target/" }
+          New-Item -ItemType Directory -Force -Path app-out | Out-Null
+          Copy-Item $latestJar.FullName app-out/app.jar -Force
+
+      - name: Upload app jar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: app-out/app.jar
+
       - name: Run packaging script for ${{ matrix.arch }}
         run: pwsh scripts\package-windows.ps1 -AppVersion ${{ github.ref_name }} -JfxVersion 21 -Arch ${{ matrix.arch }}
 
       - name: Code sign MSI (optional)
-        if: ${{ env.WINDOWS_PFX && env.WINDOWS_PFX_PASSWORD }}
         shell: pwsh
         env:
           WINDOWS_PFX: ${{ secrets.WINDOWS_PFX }}
           WINDOWS_PFX_PASSWORD: ${{ secrets.WINDOWS_PFX_PASSWORD }}
           TIMESTAMP_URL: http://timestamp.digicert.com
         run: |
+          if (-not $env:WINDOWS_PFX -or -not $env:WINDOWS_PFX_PASSWORD) {
+            Write-Host "Signing skipped: WINDOWS_PFX or WINDOWS_PFX_PASSWORD not set."
+            exit 0
+          }
+
           $pfxPath = "code-signing.pfx"
           Write-Host "Writing PFX from secret to $pfxPath"
           [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_PFX))
@@ -100,6 +118,26 @@ jobs:
         with:
           path: artifacts
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Generate update4j config.xml
+        run: |
+          mkdir -p release-out
+          BASE_URI="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/"
+          APP_JAR_PATH="artifacts/app-jar/app.jar"
+          echo "Using baseUri=$BASE_URI"
+          mvn -DskipTests -q exec:java \
+            -Dexec.mainClass=geraConfig.GenerateUpdateConfig \
+            -Dexec.classpathScope=runtime \
+            -Dexec.args="$BASE_URI $APP_JAR_PATH test.Program release-out/config.xml"
+
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
@@ -110,4 +148,6 @@ jobs:
 
             Para instalar o programa, por favor, baixe o instalador `.msi` na seção **Assets** logo abaixo. Requer Windows 64-bit.
           files: |
-            artifacts/installer-x64/*.msi
+              artifacts/installer-x64/*.msi
+              artifacts/app-jar/app.jar
+              release-out/config.xml

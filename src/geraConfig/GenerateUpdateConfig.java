@@ -14,71 +14,108 @@ import java.util.List;
 import org.update4j.Configuration;
 import org.update4j.FileMetadata;
 
-/**
- * Scans target/ for application artifacts and generates an update4j config XML
- * with SHA-256 checksums. Writes to src/config/generated-config.xml
- */
-public class GenerateUpdateConfig {
 
-    public static void main(String[] args) throws Exception {
+public class GenerateUpdateConfig 
+{
+    public static void main(String[] args) throws Exception
+    {
         Path projectRoot = Paths.get(System.getProperty("user.dir"));
-        Path target = projectRoot.resolve("target");
-        if (!Files.exists(target)) {
-            System.err.println("target/ not found. Run mvn package first.");
+
+        // Args:
+        // 0: baseUri (required)
+        // 1: artifact local path (e.g., artifacts/app-jar/app.jar) (required)
+        // 2: main class (optional, default test.Program)
+        // 3: output path for config.xml (optional, default src/config/generated-config.xml)
+
+        if (args.length < 2) 
+        {
+            System.err.println("Usage: GenerateUpdateConfig <baseUri> <artifactLocalPath> [mainClass] [outputPath]");
             return;
         }
 
-        List<org.update4j.FileMetadata.Reference> files = new ArrayList<>();
+        String baseUri = args[0];
+        String artifactLocalPath = args[1];
+        String mainClass = args.length > 2 ? args[2] : "test.Program";
+        Path output = args.length > 3 ? Paths.get(args[3]) : projectRoot.resolve("src/config/generated-config.xml");
 
-        // find jars in target
-        Files.list(target).filter(p -> p.getFileName().toString().endsWith(".jar")).forEach(p -> {
-            try {
-                String checksum = sha256(p);
-                org.update4j.FileMetadata.Reference fm = FileMetadata.readFrom(p.toString()).classpath();
-                files.add(fm);
-                System.out.println("Added: " + p.getFileName() + " checksum=" + checksum);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        Path artifact = Paths.get(artifactLocalPath);
 
-
-    String baseUri = args.length > 0 ? args[0] : "https://example.com/print/releases/latest/";
-
-    Configuration.Builder builder = Configuration.builder()
-        .baseUri(baseUri)
-        .basePath("${user.dir}/");
-
-        for (org.update4j.FileMetadata.Reference fm : files) {
-            builder = builder.file(fm);
+        if (!Files.exists(artifact)) 
+        {
+            System.err.println("Artifact not found: " + artifact.toAbsolutePath());
+            return;
         }
+
+        // Choose a user-writable basePath by default (Windows vs others)
+        String os = System.getProperty("os.name", "").toLowerCase();
+        String basePath;
+
+        if (os.contains("win"))
+            basePath = "${user.home}/AppData/Local/print/app/"; 
+        else
+            basePath = "${user.home}/.print/app/";
+
+        // Build file metadata: source is artifact local path; target path inside basePath is fixed name 'app.jar'
+        List<org.update4j.FileMetadata.Reference> files = new ArrayList<>();
+        try
+         {
+            String checksum = sha256(artifact);
+            org.update4j.FileMetadata.Reference fm = FileMetadata
+                .readFrom(artifact.toString())
+                .path("app.jar")
+                .classpath();
+            files.add(fm);
+            System.out.println("Added: app.jar checksum=" + checksum);
+        } 
+        catch (IOException e) 
+        {
+            throw new RuntimeException(e);
+        }
+
+        Configuration.Builder builder = Configuration.builder()
+            .baseUri(baseUri)
+            .basePath(basePath)
+            .property("main.class", mainClass);
+
+        for (org.update4j.FileMetadata.Reference fm : files)
+            builder = builder.file(fm);
 
         Configuration cfg = builder.build();
 
-        Path out = projectRoot.resolve("src/config/generated-config.xml");
-        try (Writer w = Files.newBufferedWriter(out, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+
+        if (output.getParent() != null && !Files.exists(output.getParent()))
+            Files.createDirectories(output.getParent());
+        
+        try (Writer w = Files.newBufferedWriter(output, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))
+        {
             cfg.write(w);
         }
 
-        System.out.println("Wrote: " + out);
+        System.out.println("Wrote: " + output.toAbsolutePath());
     }
 
-    private static String sha256(Path p) throws IOException {
-        try {
+    private static String sha256(Path p) throws IOException 
+    {
+        try
+        {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] data = Files.readAllBytes(p);
             byte[] digest = md.digest(data);
             return bytesToHex(digest);
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             throw new IOException(e);
         }
     }
 
-    private static String bytesToHex(byte[] bytes) {
-        try (Formatter formatter = new Formatter()) {
-            for (byte b : bytes) {
+    private static String bytesToHex(byte[] bytes)
+    {
+        try (Formatter formatter = new Formatter()) 
+        {
+            for (byte b : bytes) 
                 formatter.format("%02x", b);
-            }
+
             return formatter.toString();
         }
     }
