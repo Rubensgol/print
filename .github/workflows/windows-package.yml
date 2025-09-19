@@ -131,9 +131,13 @@ jobs:
         run: |
           mkdir -p release-out
           BASE_URI="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/"
-          APP_JAR_PATH="artifacts/app-jar/app.jar"
+          APP_JAR_PATH="$(pwd)/artifacts/app-jar/app.jar"
           echo "Using baseUri=$BASE_URI"
-          mvn -DskipTests -q exec:java \
+          echo "APP_JAR_PATH=$APP_JAR_PATH"
+          ls -la artifacts || true
+          ls -la artifacts/app-jar || true
+          test -f "$APP_JAR_PATH" || { echo "ERROR: app.jar not found at $APP_JAR_PATH"; exit 1; }
+          mvn -e -DskipTests exec:java \
             -Dexec.mainClass=geraConfig.GenerateUpdateConfig \
             -Dexec.classpathScope=runtime \
             -Dexec.args="$BASE_URI $APP_JAR_PATH test.Program release-out/config.xml"
