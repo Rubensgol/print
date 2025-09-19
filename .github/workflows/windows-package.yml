@@ -113,10 +113,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
+      - name: Download app jar artifact
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: app-jar
+          path: artifacts/app-jar
+
+      - name: Download installer artifact (x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: installer-x64
+          path: artifacts/installer-x64
 
       - name: Checkout repository
         uses: actions/checkout@v4
