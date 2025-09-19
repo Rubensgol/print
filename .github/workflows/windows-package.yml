@@ -125,6 +125,25 @@ jobs:
           name: installer-x64
           path: artifacts/installer-x64
 
+      - name: Normalize MSI filenames (versioned and latest)
+        run: |
+          set -e
+          mkdir -p artifacts/normalized
+          TAG_NAME="${{ github.ref_name }}"
+          # Find the first MSI in the installer artifact folder
+          MSI_SRC=$(ls -1 artifacts/installer-x64/*.msi | head -n1)
+          if [ -z "$MSI_SRC" ]; then
+            echo "ERROR: No MSI found under artifacts/installer-x64" >&2
+            ls -la artifacts/installer-x64 || true
+            exit 1
+          fi
+          echo "Found MSI: $MSI_SRC"
+          VERSIONED="artifacts/normalized/Print-${TAG_NAME}.msi"
+          LATEST="artifacts/normalized/Print-latest.msi"
+          cp "$MSI_SRC" "$VERSIONED"
+          cp "$MSI_SRC" "$LATEST"
+          echo "Created: $VERSIONED and $LATEST"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -160,5 +179,7 @@ jobs:
             Para instalar o programa, por favor, baixe o instalador `.msi` na seção **Assets** logo abaixo. Requer Windows 64-bit.
           files: |
               artifacts/installer-x64/*.msi
+              artifacts/normalized/Print-${{ github.ref_name }}.msi
+              artifacts/normalized/Print-latest.msi
               artifacts/app-jar/app.jar
               release-out/config.xml
