@@ -138,8 +138,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       
-      - name: Compile project
-        run: mvn compile
+      - name: package project
+        run: mvn package
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
