@@ -22,6 +22,14 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
       - name: Cache Chocolatey packages
         id: choco-cache
         uses: actions/cache@v4
@@ -122,74 +130,43 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Download artifacts (API fallback)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO_FULL: ${{ github.repository }}
-          RUN_ID: ${{ github.run_id }}
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts
-          echo "Repository: $REPO_FULL"
-          OWNER=${REPO_FULL%%/*}
-          REPO=${REPO_FULL##*/}
-          echo "Owner=$OWNER Repo=$REPO Run=$RUN_ID"
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      
+      - name: Compile project
+        run: mvn compile
 
-          # Use the REST API to list artifacts for this run and download required ones
-          ART_URL="https://api.github.com/repos/$OWNER/$REPO/actions/runs/$RUN_ID/artifacts"
-          echo "Querying artifacts from $ART_URL"
-          curl -sS -H "Authorization: token $GITHUB_TOKEN" "$ART_URL" -o artifacts.json
-          cat artifacts.json | jq '.artifacts[].name' || true
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
-          download_and_extract() {
-            NAME="$1"
-            TARGET_DIR="$2"
-            ID=$(jq -r --arg n "$NAME" '.artifacts[] | select(.name==$n) | .id' artifacts.json)
-            if [ -z "$ID" ] || [ "$ID" = "null" ]; then
-              echo "ERROR: artifact '$NAME' not found in run artifacts" >&2
-              exit 2
-            fi
-            URL="https://api.github.com/repos/$OWNER/$REPO/actions/artifacts/$ID/zip"
-            echo "Downloading artifact $NAME (id=$ID)"
-            mkdir -p "$TARGET_DIR"
-            curl -sSL -H "Authorization: token $GITHUB_TOKEN" "$URL" -o /tmp/${NAME}.zip
-            unzip -q /tmp/${NAME}.zip -d "$TARGET_DIR"
-            rm -f /tmp/${NAME}.zip
-            echo "Extracted $NAME to $TARGET_DIR"
-          }
-
-          download_and_extract app-jar artifacts/app-jar
-          download_and_extract installer-x64 artifacts/installer-x64
-
-      - name: Normalize MSI filenames (versioned and latest)
+      - name: Normalize MSI filenames
         run: |
           set -e
           mkdir -p artifacts/normalized
           TAG_NAME="${{ github.ref_name }}"
-          # Find the first MSI in the installer artifact folder
-          MSI_SRC=$(ls -1 artifacts/installer-x64/*.msi | head -n1)
-          if [ -z "$MSI_SRC" ]; then
-            echo "ERROR: No MSI found under artifacts/installer-x64" >&2
-            ls -la artifacts/installer-x64 || true
-            exit 1
-          fi
-          echo "Found MSI: $MSI_SRC"
-          VERSIONED="artifacts/normalized/Print-${TAG_NAME}.msi"
-          LATEST="artifacts/normalized/Print-latest.msi"
-          cp "$MSI_SRC" "$VERSIONED"
-          cp "$MSI_SRC" "$LATEST"
-          echo "Created: $VERSIONED and $LATEST"
+          MSI_SRC=$(find artifacts/installer-x64 -name '*.msi' -print -quit)
+          if [ -z "$MSI_SRC" ]; then echo "ERROR: No MSI found" >&2; exit 1; fi
+          
+          cp "$MSI_SRC" "artifacts/normalized/Print-${TAG_NAME}.msi"
+          cp "$MSI_SRC" "artifacts/normalized/Print-latest.msi"
 
       - name: Generate update4j config.xml
         run: |
           mkdir -p release-out
           BASE_URI="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/"
-          APP_JAR_PATH="$(pwd)/artifacts/app-jar/app.jar"
-          echo "Using baseUri=$BASE_URI"
-          echo "APP_JAR_PATH=$APP_JAR_PATH"
-          ls -la artifacts || true
-          ls -la artifacts/app-jar || true
-          test -f "$APP_JAR_PATH" || { echo "ERROR: app.jar not found at $APP_JAR_PATH"; exit 1; }
+          
+          # Pega o JAR do uber-jar criado pelo build, que já está aqui por causa do checkout
+          APP_JAR_PATH=$(find target -name '*-jar-with-dependencies.jar' -print -quit)
+          if [ -z "$APP_JAR_PATH" ]; then APP_JAR_PATH=$(find target -name '*.jar' -print -quit); fi
+          if [ -z "$APP_JAR_PATH" ]; then echo "ERROR: No JAR found in target/" >&2; exit 1; fi
+
           mvn -e -DskipTests exec:java \
             -Dexec.mainClass=geraConfig.GenerateUpdateConfig \
             -Dexec.classpathScope=runtime \
@@ -202,11 +179,7 @@ jobs:
           name: Release ${{ github.ref_name }}
           body: |
             # Lançamento ${{ github.ref_name }}
-
-            Para instalar o programa, por favor, baixe o instalador `.msi` na seção **Assets** logo abaixo. Requer Windows 64-bit.
+            Para instalar o programa, baixe o instalador `.msi` na seção **Assets** logo abaixo. Requer Windows 64-bit.
           files: |
-              artifacts/installer-x64/*.msi
-              artifacts/normalized/Print-${{ github.ref_name }}.msi
-              artifacts/normalized/Print-latest.msi
-              artifacts/app-jar/app.jar
-              release-out/config.xml
+            artifacts/normalized/*.msi
+            release-out/config.xml
