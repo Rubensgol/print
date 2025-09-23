@@ -113,6 +113,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Download artifacts (API fallback)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -170,15 +179,6 @@ jobs:
           cp "$MSI_SRC" "$VERSIONED"
           cp "$MSI_SRC" "$LATEST"
           echo "Created: $VERSIONED and $LATEST"
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
 
       - name: Generate update4j config.xml
         run: |
