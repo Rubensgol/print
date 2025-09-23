@@ -113,17 +113,44 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download app jar artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-jar
-          path: artifacts/app-jar
+      - name: Download artifacts (API fallback)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_FULL: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          echo "Repository: $REPO_FULL"
+          OWNER=${REPO_FULL%%/*}
+          REPO=${REPO_FULL##*/}
+          echo "Owner=$OWNER Repo=$REPO Run=$RUN_ID"
 
-      - name: Download installer artifact (x64)
-        uses: actions/download-artifact@v4
-        with:
-          name: installer-x64
-          path: artifacts/installer-x64
+          # Use the REST API to list artifacts for this run and download required ones
+          ART_URL="https://api.github.com/repos/$OWNER/$REPO/actions/runs/$RUN_ID/artifacts"
+          echo "Querying artifacts from $ART_URL"
+          curl -sS -H "Authorization: token $GITHUB_TOKEN" "$ART_URL" -o artifacts.json
+          cat artifacts.json | jq '.artifacts[].name' || true
+
+          download_and_extract() {
+            NAME="$1"
+            TARGET_DIR="$2"
+            ID=$(jq -r --arg n "$NAME" '.artifacts[] | select(.name==$n) | .id' artifacts.json)
+            if [ -z "$ID" ] || [ "$ID" = "null" ]; then
+              echo "ERROR: artifact '$NAME' not found in run artifacts" >&2
+              exit 2
+            fi
+            URL="https://api.github.com/repos/$OWNER/$REPO/actions/artifacts/$ID/zip"
+            echo "Downloading artifact $NAME (id=$ID)"
+            mkdir -p "$TARGET_DIR"
+            curl -sSL -H "Authorization: token $GITHUB_TOKEN" "$URL" -o /tmp/${NAME}.zip
+            unzip -q /tmp/${NAME}.zip -d "$TARGET_DIR"
+            rm -f /tmp/${NAME}.zip
+            echo "Extracted $NAME to $TARGET_DIR"
+          }
+
+          download_and_extract app-jar artifacts/app-jar
+          download_and_extract installer-x64 artifacts/installer-x64
 
       - name: Normalize MSI filenames (versioned and latest)
         run: |
