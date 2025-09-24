@@ -10,6 +10,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -99,9 +100,12 @@ public class Tela
 		progressBar.setProgress(0);
 
 		HBox buttonBox = new HBox(10, startButton, stopButton, atualizaButton);
+		buttonBox.setAlignment(Pos.CENTER);
 
 		VBox root = new VBox(12, tokenLabel, tokenField, buttonBox, progressBar);
-		root.setStyle("-fx-padding: 20; -fx-alignment: center; -fx-background-color: #F4F4F4;");
+		root.setAlignment(Pos.CENTER);
+		root.setStyle("-fx-padding: 20; -fx-background-color: #F4F4F4;");
+		progressBar.setMaxWidth(300);
 
 		// Actions
 		startButton.setOnAction(evt -> {
