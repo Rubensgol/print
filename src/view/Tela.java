@@ -46,12 +46,17 @@ public class Tela
 	private Button atualizaButton;
 	private ProgressBar progressBar;
 
-	public Tela(List<Integer> lidas, Configuration config) {
+	public Tela(List<Integer> lidas, Configuration config)
+	{
 		// initialize business objects now
 		comunica = new Comunica(lidas);
 		imprimir = new ImprimirDesktop();
 		aTrataArquivo = new TrataArquivo();
-		atualiza = new AtualizaUpdate4j(config);
+
+		if (config != null)
+			atualiza = new AtualizaUpdate4j(config);
+		else
+			atualiza = null;
 
 		// Ensure JavaFX toolkit started, then build UI on FX thread
 		ensureFxInitialized();
@@ -112,6 +117,10 @@ public class Tela
 
 		atualizaButton.setOnAction(evt -> {
 			try {
+				if (atualiza == null) {
+					showWarning("Atualização indisponível", "Configuração de atualização não carregada; não é possível verificar atualizações.");
+					return;
+				}
 				if (atualiza.temAtualizacao()) {
 					atualiza.atualiza();
 				} else {

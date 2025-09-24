@@ -72,10 +72,17 @@ public class GenerateUpdateConfig
             throw new RuntimeException(e);
         }
 
+        // Set baseUri/basePath and provide the application main class.
+        // update4j DefaultLauncher expects either a main class or arguments.
+        // Provide the default launcher main class explicitly so Configuration.launch()
+        // can start the updated application.
         Configuration.Builder builder = Configuration.builder()
             .baseUri(baseUri)
             .basePath(basePath)
-            .property("main.class", mainClass);
+            .property("main.class", mainClass)
+            .property("default.launcher.main.class", mainClass);
+
+        System.out.println("Set default.launcher.main.class = " + mainClass);
 
         for (org.update4j.FileMetadata.Reference fm : files)
             builder = builder.file(fm);

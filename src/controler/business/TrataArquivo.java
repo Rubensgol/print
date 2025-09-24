@@ -39,7 +39,12 @@ public class TrataArquivo implements ITrataArquivo
 	{
 		try 
 		{
-			FileHandler fh = new FileHandler("log/log-" + Util.getDataFormatadaSemBarra() + "-trata_arquivos.log");
+ 			File logDir = new File("log");
+
+ 			if (!logDir.exists())
+ 				logDir.mkdirs();
+
+ 			FileHandler fh = new FileHandler("log/log-" + Util.getDataFormatadaSemBarra() + "-trata_arquivos.log");
 			fh.setEncoding("UTF-8");
 			logger.addHandler(fh);
 			logger.setUseParentHandlers(false);
@@ -57,6 +62,13 @@ public class TrataArquivo implements ITrataArquivo
         try
         {
             logger.info("abrindo arquivo com as Separacoes lidas parada salvar");
+            // Ensure the directory exists before trying to write
+            File dir = new File("separacao");
+            if (!dir.exists()) {
+                logger.info("Criando diretório separacao: " + dir.getAbsolutePath());
+                dir.mkdirs();
+            }
+
             FileWriter myWriter = new FileWriter("separacao/" + Util.getDataFormatadaSemBarra() + ".txt");
 
             logger.info("Salvando arquivo com as Separacoes lidas");
@@ -112,6 +124,13 @@ public class TrataArquivo implements ITrataArquivo
         {
             try 
             {
+                File parent = myObj.getParentFile();
+                if (parent != null && !parent.exists()) 
+                {
+                    logger.info("Criando diretório pai para arquivo separacao: " + parent.getAbsolutePath());
+                    parent.mkdirs();
+                }
+
                 myObj.createNewFile();
             } 
             catch (IOException e) 
