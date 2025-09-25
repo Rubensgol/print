@@ -37,6 +37,7 @@ public class Program
             configUrl = new URI("https://github.com/Rubensgol/print/releases/latest/download/config.xml").toURL();
             in = new InputStreamReader(configUrl.openStream(), StandardCharsets.UTF_8);
             config = Configuration.read(in);
+            System.out.println("Loaded remote config from releases/latest");
         }
         catch (IOException | URISyntaxException e) 
         {
@@ -50,6 +51,15 @@ public class Program
             catch (IOException e1) 
             {
                 e1.printStackTrace();
+            }
+        }
+
+        if (config != null) {
+            try {
+                System.out.println("Config baseUri=" + config.getBaseUri());
+                System.out.println("Requires update? " + config.requiresUpdate());
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 

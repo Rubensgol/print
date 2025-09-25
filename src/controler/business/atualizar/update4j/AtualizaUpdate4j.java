@@ -24,17 +24,45 @@ public class AtualizaUpdate4j implements IAtualiza, UpdateHandler
     @Override
     public void atualiza() 
     {
+        try {
+            System.out.println("AtualizaUpdate4j: baseUri=" + config.getBaseUri() + " basePath=" + config.getBasePath());
+            System.out.println("Arquivos no config:");
+            config.getFiles().forEach(f -> System.out.println(" - " + f.getPath() + " checksum=" + f.getChecksum()));
+        } catch (Exception ex) {
+            System.err.println("Erro lendo config para log: " + ex.getMessage());
+        }
+
         Path zip = Paths.get("print-update.zip");
         ArchiveUpdateOptions arqv;
 
         try 
         {
+            // Check again before attempting update to avoid unnecessary work
+            if (!temAtualizacao()) {
+                System.out.println("Nenhuma atualização disponível; pulando atualização.");
+                return;
+            }
+
             arqv = UpdateOptions.archive(zip).updateHandler(AtualizaUpdate4j.this);
 
-            if(config.update(arqv).getException() == null)
+            var result = config.update(arqv);
+            if (result.getException() == null) {
+                System.out.println("Atualização baixada com sucesso; instalando...");
                 Archive.read(zip).install();
 
-            config.launch();
+                System.out.println("Instalação concluída; lançando nova versão...");
+                config.launch();
+
+                // After launching the updated application, exit this JVM so we don't keep the old UI open
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                System.exit(0);
+            } else {
+                System.err.println("Falha ao aplicar atualização: " + result.getException());
+            }
         }
         catch (IOException e) 
         {

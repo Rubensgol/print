@@ -171,6 +171,11 @@ jobs:
             -Dexec.mainClass=geraConfig.GenerateUpdateConfig \
             -Dexec.classpathScope=runtime \
             -Dexec.args="$BASE_URI $APP_JAR_PATH test.Program release-out/config.xml"
+          
+          # Ensure the application JAR is uploaded with a stable name 'app.jar'
+          # Copy the discovered APP_JAR_PATH into release-out/app.jar so it will be attached to the release
+          if [ -z "$APP_JAR_PATH" ]; then echo "ERROR: APP_JAR_PATH empty after GenerateUpdateConfig" >&2; exit 1; fi
+          cp "$APP_JAR_PATH" release-out/app.jar
 
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v2
@@ -183,3 +188,4 @@ jobs:
           files: |
             artifacts/normalized/*.msi
             release-out/config.xml
+            release-out/app.jar

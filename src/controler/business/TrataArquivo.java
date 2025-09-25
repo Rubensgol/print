@@ -39,12 +39,14 @@ public class TrataArquivo implements ITrataArquivo
 	{
 		try 
 		{
- 			File logDir = new File("log");
+            // Use a stable, user-writable application directory instead of the current working dir
+            String appBase = getAppBaseDir();
+            File logDir = new File(appBase, "log");
 
- 			if (!logDir.exists())
- 				logDir.mkdirs();
+            if (!logDir.exists())
+                logDir.mkdirs();
 
- 			FileHandler fh = new FileHandler("log/log-" + Util.getDataFormatadaSemBarra() + "-trata_arquivos.log");
+            FileHandler fh = new FileHandler(new File(logDir, "log-" + Util.getDataFormatadaSemBarra() + "-trata_arquivos.log").getPath());
 			fh.setEncoding("UTF-8");
 			logger.addHandler(fh);
 			logger.setUseParentHandlers(false);
@@ -62,14 +64,15 @@ public class TrataArquivo implements ITrataArquivo
         try
         {
             logger.info("abrindo arquivo com as Separacoes lidas parada salvar");
-            // Ensure the directory exists before trying to write
-            File dir = new File("separacao");
-            if (!dir.exists()) {
-                logger.info("Criando diretório separacao: " + dir.getAbsolutePath());
-                dir.mkdirs();
+            // Use app base dir for separacao to ensure writable location when installed
+            String appBase = getAppBaseDir();
+            File sepDir = new File(appBase, "separacao");
+            if (!sepDir.exists()) {
+                logger.info("Criando diretório separacao: " + sepDir.getAbsolutePath());
+                sepDir.mkdirs();
             }
 
-            FileWriter myWriter = new FileWriter("separacao/" + Util.getDataFormatadaSemBarra() + ".txt");
+            FileWriter myWriter = new FileWriter(new File(sepDir, Util.getDataFormatadaSemBarra() + ".txt"));
 
             logger.info("Salvando arquivo com as Separacoes lidas");
 
@@ -88,13 +91,45 @@ public class TrataArquivo implements ITrataArquivo
         }
     }
 
+    /**
+     * Returns a stable application base directory under the user's home directory.
+     * On Windows: %LOCALAPPDATA%/print/app
+     * On other OS: ~/.print/app
+     */
+    private String getAppBaseDir()
+    {
+        String os = System.getProperty("os.name", "").toLowerCase();
+        String userHome = System.getProperty("user.home", ".");
+        String base;
+
+        if (os.contains("win"))
+        {
+            String localApp = System.getenv("LOCALAPPDATA");
+            if (localApp == null || localApp.isEmpty())
+                localApp = userHome + File.separator + "AppData" + File.separator + "Local";
+            base = localApp + File.separator + "print" + File.separator + "app";
+        }
+        else
+        {
+            base = userHome + File.separator + ".print" + File.separator + "app";
+        }
+
+        File b = new File(base);
+        if (!b.exists())
+            b.mkdirs();
+
+        logger.info("App base dir: " + b.getAbsolutePath());
+        return b.getAbsolutePath();
+    }
+
     public List<Integer> carregaArquivo()
     {
         List<Integer> nfs = new ArrayList<>();
 
         logger.info("Carregando arquivo das Separacoes");
         String fileName = Util.getDataFormatadaSemBarra();
-        File myObj = new File("separacao/" + fileName + ".txt");
+        String appBase = getAppBaseDir();
+        File myObj = new File(new File(appBase, "separacao"), fileName + ".txt");
 
         logger.info("Carregado arquivo: " + fileName + ".txt");
 

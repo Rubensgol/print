@@ -1,5 +1,4 @@
 package view;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -17,6 +16,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
+import javafx.scene.control.ComboBox;
 
 import org.update4j.Configuration;
 
@@ -31,8 +33,7 @@ import model.EnumRetorno;
 import model.LinkEtiqueta;
 
 
-public class Tela
-{
+public class Tela {
 	private Comunica comunica;
 	private IImprimir imprimir;
 	private List<LinkEtiqueta> links;
@@ -46,9 +47,9 @@ public class Tela
 	private Button stopButton;
 	private Button atualizaButton;
 	private ProgressBar progressBar;
+	private ComboBox<String> printerComboBox;
 
-	public Tela(List<Integer> lidas, Configuration config)
-	{
+	public Tela(List<Integer> lidas, Configuration config) {
 		// initialize business objects now
 		comunica = new Comunica(lidas);
 		imprimir = new ImprimirDesktop();
@@ -75,10 +76,20 @@ public class Tela
 		}
 	}
 
-	private void createAndShowStage() 
-	{
+	private void createAndShowStage() {
 		Stage stage = new Stage(StageStyle.DECORATED);
 		stage.setTitle("Print Etiqueta - App");
+
+		// Impressoras disponíveis
+		printerComboBox = new ComboBox<>();
+		printerComboBox.setPromptText("Selecione a impressora");
+		PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
+		for (PrintService ps : services) {
+			printerComboBox.getItems().add(ps.getName());
+		}
+		if (!printerComboBox.getItems().isEmpty()) {
+			printerComboBox.getSelectionModel().selectFirst();
+		}
 
 		Label tokenLabel = new Label("Digite seu Token de Acesso:");
 		tokenLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
@@ -102,7 +113,7 @@ public class Tela
 		HBox buttonBox = new HBox(10, startButton, stopButton, atualizaButton);
 		buttonBox.setAlignment(Pos.CENTER);
 
-		VBox root = new VBox(12, tokenLabel, tokenField, buttonBox, progressBar);
+		VBox root = new VBox(12, printerComboBox, tokenLabel, tokenField, buttonBox, progressBar);
 		root.setAlignment(Pos.CENTER);
 		root.setStyle("-fx-padding: 20; -fx-background-color: #F4F4F4;");
 		progressBar.setMaxWidth(300);
@@ -119,31 +130,56 @@ public class Tela
 
 		stopButton.setOnAction(evt -> stopSearch());
 
-		atualizaButton.setOnAction(evt -> {
-			try {
-				if (atualiza == null) {
-					showWarning("Atualização indisponível", "Configuração de atualização não carregada; não é possível verificar atualizações.");
-					return;
-				}
-				if (atualiza.temAtualizacao()) {
+		// Update button: disable while running, check for updates, run updater in background
+		atualizaButton.setOnAction((e) -> {
+			// Prevent multiple clicks while updating
+			atualizaButton.setDisable(true);
+
+			new Thread(() -> {
+				try {
+					if (atualiza == null) {
+						Platform.runLater(() -> {
+							showWarning("Atualização - Config ausente", "Não foi possível carregar a configuração de atualização.");
+							atualizaButton.setDisable(false);
+						});
+						return;
+					}
+
+					// Double-check before starting update
+					if (!atualiza.temAtualizacao()) {
+						Platform.runLater(() -> {
+							showInfo("Atualização", "Não há atualizações disponíveis.");
+							atualizaButton.setDisable(false);
+						});
+						return;
+					}
+
+					// Run the update; AtualizaUpdate4j will exit the JVM after launch on success
 					atualiza.atualiza();
-				} else {
-					showInfo("Atualização", "Aplicativo já está atualizado.");
+
+					// If we reach here, update did not exit the JVM (likely failed)
+					Platform.runLater(() -> {
+						showInfo("Atualização", "Processo de atualização finalizado (verifique logs para detalhes)." );
+						atualizaButton.setDisable(false);
+					});
+
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					Platform.runLater(() -> {
+						showWarning("Erro ao atualizar", ex.getMessage());
+						atualizaButton.setDisable(false);
+					});
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				showWarning("Erro", "Erro ao verificar/realizar atualização: " + e.getMessage());
-			}
+			}, "Tela-Worker").start();
 		});
 
-		Scene scene = new Scene(root, 420, 200);
+		Scene scene = new Scene(root, 420, 240);
 		stage.setScene(scene);
 		stage.setResizable(false);
 		stage.show();
 	}
 
-	private void startSearch(String token)
-	{
+	private void startSearch(String token) {
 		buscando.set(true);
 		updateButtons();
 		progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
@@ -159,7 +195,15 @@ public class Tela
 							if (links != null) {
 								for (LinkEtiqueta link : links) {
 									try {
-										imprimir.imprimir(link.getLink());
+											// If the concrete printer supports setting a printer name, update it from UI
+											if (imprimir instanceof ImprimirDesktop && printerComboBox != null) {
+												String selected = printerComboBox.getValue();
+												if (selected != null && !selected.isEmpty()) {
+													((ImprimirDesktop) imprimir).setPrinterName(selected);
+												}
+											}
+
+											imprimir.imprimir(link.getLink());
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
@@ -194,8 +238,7 @@ public class Tela
 		worker.start();
 	}
 
-	private void stopSearch() 
-	{
+	private void stopSearch() {
 		buscando.set(false);
 		aTrataArquivo.salvaTxt(comunica.getSeparacoesLidas());
 		updateButtons();

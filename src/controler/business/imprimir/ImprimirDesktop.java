@@ -15,6 +15,12 @@ import controler.interfaces.IImprimir;
 public class ImprimirDesktop implements IImprimir
 {
 	private static final Logger logger = Logger.getLogger(ImprimirDesktop.class.getName());
+	private String printerName;
+
+	public void setPrinterName(String printerName) 
+	{
+		this.printerName = printerName;
+	}
 
 	public void imprimir(String path) 
 	{
@@ -39,7 +45,7 @@ public class ImprimirDesktop implements IImprimir
 			logger.info("imprimindo arquivo: " + path);
 
 			document = Loader.loadPDF(docFile);
-			PrintJob.printFile(document);
+			PrintJob.printFile(document, printerName);
 		}
 		catch (Exception e) 
         {
